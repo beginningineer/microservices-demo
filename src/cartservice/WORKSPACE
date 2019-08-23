@@ -1,0 +1,130 @@
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# due to https://github.com/grpc/grpc-dotnet/issues/295#issuecomment-497692813
+local_repository(
+    name = "build_stack_rules_proto",
+    path = "../../3rdparty/rules_proto",
+)
+
+#http_archive(
+#    name = "build_stack_rules_proto",
+#    urls = ["https://github.com/stackb/rules_proto/archive/d9a123032f8436dbc34069cfc3207f2810a494ee.tar.gz"],
+#    sha256 = "85ccc69a964a9fe3859b1190a7c8246af2a4ead037ee82247378464276d4262a",
+#    strip_prefix = "rules_proto-d9a123032f8436dbc34069cfc3207f2810a494ee",
+#)
+
+git_repository(
+    name = "io_bazel_rules_dotnet",
+    remote = "https://github.com/bazelbuild/rules_dotnet",
+    commit = "787fa6182845e42f5cea686a161f54aa5d23f335",
+    shallow_since = "1558181980 +0200",
+)
+
+http_archive(
+    name = "com_google_protobuf",
+    sha256 = "a19dcfe9d156ae45d209b15e0faed5c7b5f109b6117bfc1974b6a7b98a850320",
+    strip_prefix = "protobuf-3.7.0",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.7.0.tar.gz"],
+)
+
+http_archive(
+    name = "com_github_grpc_grpc",
+    sha256 = "cce1d4585dd017980d4a407d8c5e9f8fc8c1dbb03f249b99e88a387ebb45a035",
+    strip_prefix = "grpc-1.22.1",
+    urls = ["https://github.com/grpc/grpc/archive/v1.22.1.tar.gz"],
+)
+
+load(
+    "@io_bazel_rules_dotnet//dotnet:defs.bzl",
+    "core_register_sdk",
+    "net_register_sdk",
+    "mono_register_sdk",
+    "dotnet_register_toolchains",
+    "dotnet_repositories",
+    "dotnet_nuget_new",
+    "nuget_package"
+    )
+
+core_version = "v2.1.503"
+
+dotnet_register_toolchains(
+    core_version = core_version,
+)
+
+core_register_sdk(
+    name = "core_sdk",
+    core_version = core_version,
+)
+
+mono_register_sdk()
+
+dotnet_repositories()
+
+load("@build_stack_rules_proto//csharp:deps.bzl", "csharp_grpc_library")
+
+csharp_grpc_library()
+
+load("@build_stack_rules_proto//csharp/nuget:packages.bzl", nuget_packages = "packages")
+
+nuget_packages()
+
+load("@build_stack_rules_proto//csharp/nuget:nuget.bzl", "nuget_protobuf_packages", "nuget_grpc_packages")
+
+nuget_protobuf_packages()
+
+nuget_grpc_packages()
+
+dotnet_nuget_new(
+    name = "stackexchange.redis",
+    package = "StackExchange.Redis",
+    version = "2.0.601",
+    build_file = "//nuget_packages:stackexchange.redis.bzl",
+    sha256 = "1c3e4f4eb43600bf9408ef377f4077b8447d6025626e8463e758a370680a4d58"
+)
+
+dotnet_nuget_new(
+    name = "grpc.healthcheck",
+    package = "Grpc.HealthCheck",
+    version = "1.22.1",
+    build_file = "//nuget_packages:grpc.healthcheck.bzl",
+    sha256 = "888ff2ee0609d1b990eaa9ba67ebd9597db057289127fa0c2f4e97f2ee2a7008"
+)
+
+dotnet_nuget_new(
+    name = "microsoft.extensions.configuration",
+    package = "Microsoft.Extensions.Configuration",
+    version = "2.1.1",
+    build_file = "//nuget_packages:microsoft.extensions.configuration.bzl",
+    sha256 = "a673ba19d9a73c9f03e2998ca64c7080ce06820c06776524fb9b3a39f2678408"
+)
+
+http_archive(
+    name = "io_bazel_rules_docker",
+    sha256 = "e513c0ac6534810eb7a14bf025a0f159726753f97f74ab7863c650d26e01d677",
+    strip_prefix = "rules_docker-0.9.0",
+    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.9.0/rules_docker-v0.9.0.tar.gz"],
+)
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+container_repositories()
+
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
+container_deps()
+
+load(
+    "@io_bazel_rules_docker//container:new_pull.bzl",
+    "new_container_pull",
+)
+
+new_container_pull(
+    name = "alpine_linux_amd64",
+    registry = "index.docker.io",
+    repository = "library/alpine",
+    tag = "3.8",
+)
