@@ -20,3 +20,11 @@ py_binary(
     main = "recommendation_server.py",
     deps = [] + all_requirements
 )
+
+##### Protobuf
+load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
+
+python_grpc_library(
+    name = "greeter_python_library",
+    deps = ["@build_stack_rules_proto//example/proto:greeter_grpc"],
+)

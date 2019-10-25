@@ -1,3 +1,13 @@
+###Bazel build announcements:
+
+`Oct-22-2019`
+- workspace and build files added for services written in Python
+
+`Oct-25-2019`
+- proto rules added, but works on Linux machine
+- blocker for proto rules on Windows, issue created: https://github.com/stackb/rules_proto/issues/128
+
+
 # Hipster Shop: Cloud-Native Microservices Demo Application
 
 This project contains a 10-tier microservices application. The application is a
